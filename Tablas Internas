@@ -1,0 +1,51 @@
+CLASS z07_tablas_practicas DEFINITION  PUBLIC  FINAL  CREATE PUBLIC .    
+PUBLIC SECTION.      
+INTERFACES if_oo_adt_classrun .  
+PROTECTED SECTION.  
+PRIVATE SECTION.ENDCLASS.      
+CLASS z07_tablas_practicas IMPLEMENTATION.    
+METHOD if_oo_adt_classrun~main.
+" Ejemplos con tablas standard  
+*  TYPES: BEGIN OF ty_persona,
+*           id     TYPE i,
+*           nombre TYPE string,
+*         END OF ty_persona.
+*  DATA:
+*    lt_personas TYPE STANDARD TABLE OF ty_persona WITH EMPTY KEY,
+*    wa_persona  TYPE ty_persona.  
+" Insertar Duplicados  
+*    wa_persona = VALUE #( id = 1 nombre = 'ana' ). APPEND wa_persona TO lt_personas.
+*    wa_persona = VALUE #( id = 2 nombre = 'Luis' ). APPEND wa_persona TO lt_personas.
+*    wa_persona = VALUE #( id = 1 nombre = 'ana' ). APPEND wa_persona TO lt_personas.  
+" Leer todos los rgistros con id = 1  
+* LOOP at lt_personas into wa_persona where id = 1.
+* out->write( | Id: { wa_persona-id } - Nombre: { wa_persona-nombre } | ).
+*  ENDLOOP.  "Modificar todos los registros de Ana
+*  LOOP at lt_personas ASSIGNING FIELD-SYMBOL(<fs>).
+*    if <fs>-nombre = 'Ana'.*      <fs>-nombre = 'Ana Gomez'.
+*    ENDIF.
+*   ENDLOOP.  
+*Ejemplo con tablas Sorted con clave unica y no unica  
+*Clave unica  
+*Data: lt_sort_u type SORTED TABLE OF ty_persona
+*      WITH UNIQUE KEY id,
+*      wa_sort  type ty_persona.
+** "Insercion automatica ordenada
+** insert value #( id = 3 nombre = 'Carlos' ) into table lt_sort_u.
+* insert value #( id = 4 nombre = 'Lucia' ) into table lt_sort_u.  
+"Leer con clave unica
+** READ TABLE lt_sort_u INTO wa_sort WITH KEY id = 3.
+* IF sy-subrc = 0.*   out->write( | Encontrado (Unico) { wa_sort-nombre } | ).
+* ENDIF.  " Clave no unica  *DATA: lt_sort_nu TYPE SORTED TABLE OF ty_persona
+*      WITH NON-UNIQUE KEY nombre,*      wa_sort2   TYPE ty_persona.
+**" Insertar con posibles duplicados en nombre*INSERT VALUE #( id = 5 nombre = 'Ana' ) INTO TABLE lt_sort_nu.
+*INSERT VALUE #( id = 6 nombre = 'Ana' ) INTO TABLE lt_sort_nu.  
+" leer todos los Ana con table-expressions.
+" Tengo que verificar el typo ty_persona me falla
+*DATA(lt_anas) = FILTER ty_persona( lt_sort_nu WHERE nombre = 'Ana' ).
+**LOOP AT lt_anas INTO wa_sort2.
+*  out->write( |Id: { wa_sort2-id } - Nombre: { wa_sort2-nombre }| ).
+*ENDLOOP.    
+ENDMETHOD.
+ENDCLASS.
+
