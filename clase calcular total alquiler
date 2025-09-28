@@ -1,0 +1,47 @@
+CLASS z07_cl_calcular_totales DEFINITION
+PUBLIC  FINAL  CREATE PUBLIC .    
+PUBLIC SECTION.      
+INTERFACES if_oo_adt_classrun .  
+PROTECTED SECTION.  
+PRIVATE SECTION.ENDCLASS.      
+CLASS z07_cl_calcular_totales IMPLEMENTATION.      
+METHOD if_oo_adt_classrun~main.      
+DATA ls_totales TYPE z07_tot_socio.    
+DATA lt_alquiler_calculado TYPE STANDARD TABLE OF z07_tot_socio.      
+" Borramos los datos que haya en la tabla de totales    
+DELETE FROM z07_tot_socio.      
+" Empezamos rescuperando los datos de la tabla z07_alquiler      
+SELECT FROM z07_alquiler    
+FIELDS *    
+INTO TABLE @DATA(lt_alquiler).      
+IF sy-subrc EQ 0.      
+" Si hemos encontrado datos, Ordenamos los datos del alquiler por id de socio      
+SORT lt_alquiler BY idsocio.      
+" Hago un loop a la tabla de manera que me vaya sumando los datos para el socio      
+CLEAR ls_totales.        
+LOOP AT lt_alquiler INTO DATA(ls_alquiler).          
+" Si el valor que tiene el campo socio de totales es diferente al del alquiler, guardo la estrucutra        
+" en la tabla de lt_alquier_calculado y así tendré todos los valores asociadaos al socio de ls_totales.        
+" Luego limpio ls_totales y empiezo a calcular para el sigiuetne socio          
+IF ls_totales-id_socio NE ls_alquiler-idsocio AND ls_totales-id_socio IS NOT INITIAL.          
+APPEND ls_totales TO lt_alquiler_calculado.          CLEAR ls_totales.        ENDIF.       
+" Ponemos el número de socio        ls_totales-id_socio = ls_alquiler-idsocio.        
+" Le añadimos 1 al contador de alquileres        
+ls_totales-num_alquileres = ls_totales-num_alquileres + 1.        
+" Añado al total los días de retraso del alquiler en concreto       
+ls_totales-dias_retraso = ls_totales-dias_retraso + ls_alquiler-diasretraso.        
+" Sumamos el importe del alquier y la multa en el que estamos en el loop al total de importe y multa        
+ls_totales-tot_importe = ls_totales-tot_importe + ls_alquiler-importe.        
+ls_totales-tot_multa = ls_totales-tot_multa + ls_alquiler-multa.        
+" Rellenamos la moneda con EUR por defecto        
+ls_totales-waers = 'EUR'.        
+" Para calcular el máximo de la multa:        
+" Si la multa del alquier del loop es mayor a la que tenemos en totales, se pone este valor en la de totales        
+IF ls_totales-max_multa < ls_alquiler-multa.          
+ls_totales-max_multa = ls_alquiler-multa.          
+ENDIF.      
+ENDLOOP.      
+APPEND ls_totales TO lt_alquiler_calculado.     
+MODIFY z07_tot_socio FROM TABLE @lt_alquiler_calculado.    
+ENDIF.  ENDMETHOD.ENDCLASS.
+
